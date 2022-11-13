@@ -91,7 +91,7 @@ class HoughTransform{
         return (xdouble*cos(angle)) + (ydouble*sin(angle)) + offSet;
     }
 
-    void reformatPrettyPrint(int **arr, ofstream& out){
+    void prettyPrint(int **arr, ofstream& out){
         //algo in previous projects
 
         for(int i=1; i<=numRows; i++){
