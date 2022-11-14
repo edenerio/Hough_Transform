@@ -8,18 +8,20 @@ using namespace std;
 
 class HoughTransform{
     public:
-        int numRows, numCols, minVal, maxVal, houghDist, houghAngle, angleInDegree;
+        int numRows, numCols, minVal, maxVal, houghDist, houghAngle, angleInDegree, cartMax, polMax;
         int **imgAry;
         int **cartesianHoughAry;
         int **polarHoughAry;
         double angleInRadians;
-        int offSet;
+        double offSet;
     
     HoughTransform(int nr, int nc, int minv, int maxv){
         numRows = nr;
         numCols = nc;
         minVal = minv;
         maxVal = maxv;
+        cartMax = 0;
+        polMax = 0;
         houghDist = 2 * sqrt((nr*nr)+(nc*nc));
         houghAngle = 180;
         offSet = sqrt((nr*nr)+(nc*nc));
@@ -28,6 +30,10 @@ class HoughTransform{
         polarHoughAry = new int*[houghDist];
         for(int i=0; i<nr; i++){
             imgAry[i] = new int[nc]();
+            cartesianHoughAry[i] = new int[houghAngle]();
+            polarHoughAry[i] = new int[houghAngle](); 
+        }
+        for(int i=nr; i<houghDist; i++){
             cartesianHoughAry[i] = new int[houghAngle]();
             polarHoughAry[i] = new int[houghAngle](); 
         }
@@ -70,15 +76,18 @@ class HoughTransform{
             angleInRadians = angleInDegree / 180.00 * M_PI;
             dist = cartesianDist(x, y, angleInRadians);
             distInt = (int)dist;
-            cout << dist << " " << distInt << endl;
             cartesianHoughAry[distInt][angleInDegree]++;
+            if(cartesianHoughAry[distInt][angleInDegree] > cartMax){
+                cartMax = cartesianHoughAry[distInt][angleInDegree];
+            }
             dist = polarDist(x, y, angleInRadians);
-            cout << dist << endl;
             distInt = (int)dist;
             polarHoughAry[distInt][angleInDegree]++;
+            if(polarHoughAry[distInt][angleInDegree] > polMax){
+                polMax = polarHoughAry[distInt][angleInDegree];
+            }
             angleInDegree++;
         }
-        cout << "Hello" << endl;
     }
 
     double cartesianDist(int x, int y, double angle){
@@ -95,19 +104,40 @@ class HoughTransform{
         return (xdouble*cos(t)) + (ydouble*sin(t)) + offSet;
     }
 
-    void prettyPrint(int **arr, ofstream& out){
+    void prettyPrint(int **arr, ofstream& out, int rs, int cs, int mv){
         //algo in previous projects
+        string temp = "";
+        int tempInt = 0;
+        string mvTemp = to_string(mv);
+        int width = mvTemp.length();
 
-        for(int i=0; i<numRows; i++){
-            for(int j=0; j<numCols; j++){
+        for(int i=0; i<rs; i++){
+            for(int j=0; j<cs; j++){
+                temp = to_string(arr[i][j]);
+                tempInt = temp.length();
                 if(arr[i][j] == 0){
                     out << ". ";
+                    while(tempInt < width){
+                        out << " ";
+                        tempInt++;
+                    }
                 }else{
                     out << arr[i][j] << " ";
+                    while(tempInt < width){
+                        out << " ";
+                        tempInt++;
+                    }
                 }
             }
             out << endl;
         }
+    }
+    void addBorder(ofstream& out){
+        out << endl;
+        for(int i=0; i<houghAngle; i++){
+            out << "--";
+        }
+        out << endl;
     }
 };
 
@@ -137,16 +167,20 @@ int main(int argc, char *argv[]){
 
     //step 1
     hgh.loadImage(inFile);
-    hgh.prettyPrint(hgh.imgAry, outFile1);
+    outFile1 << "Image Input:" << endl;
+    hgh.prettyPrint(hgh.imgAry, outFile1, rows, cols, maxv);
+    hgh.addBorder(outFile1);
 
     //step 2
     hgh.buildHoughSpace();
-    
-    cout << "Hello" << endl;
 
     //step 3
-    hgh.prettyPrint(hgh.cartesianHoughAry, outFile1);
-    hgh.prettyPrint(hgh.polarHoughAry, outFile1);
+    outFile1 << "Cartesian:" << endl;
+    hgh.prettyPrint(hgh.cartesianHoughAry, outFile1, hgh.houghDist, hgh.houghAngle, hgh.cartMax);
+    hgh.addBorder(outFile1);
+    outFile1 << "Polar:"<< endl;
+    hgh.prettyPrint(hgh.polarHoughAry, outFile1, hgh.houghDist, hgh.houghAngle, hgh.polMax);
+    hgh.addBorder(outFile1);
 
     //step 4
     inFile.close();
