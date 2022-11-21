@@ -14,7 +14,7 @@ class HoughTransform{
         int **polarHoughAry;
         double angleInRadians;
         double offSet;
-    //asdf
+    
     HoughTransform(int nr, int nc, int minv, int maxv){
         numRows = nr;
         numCols = nc;
